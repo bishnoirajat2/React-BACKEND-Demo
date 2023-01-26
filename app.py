@@ -23,21 +23,28 @@ app.config['MYSQL_DB'] = 'pythonlogin'
 # app.config["SESSION_TYPE"] = "filesystem"
 # Session(app)
 # CORS(app)
+
+
 def token_required(func):
     @wraps(func)
     def decorated(*args, **kwargs):
         token = request.headers['Token']
-        print(type(token),token)
-        payload = jwt.decode(token, app.config['SECRET_KEY'],algorithms=['HS256'])
+        print(type(token), token)
+        payload = jwt.decode(
+            token, app.config['SECRET_KEY'], algorithms=['HS256'])
         print(payload)
 
         # except:
         return func(payload['user'], *args, **kwargs)
     return decorated
+
+
 # Intialize MySQL
 mysql = MySQL(app)
 
 # http://localhost:5000/pythonlogin/ - the following will be our login page, which will use both GET and POST requests
+
+
 @app.route('/pythonlogin/', methods=['GET', 'POST'])
 def login():
     # Output message if something goes wrong...
@@ -51,7 +58,8 @@ def login():
         password = request.json['password']
         # Check if account exists using MySQL
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM accounts WHERE username = %s AND password = SHA2(%s,256)', (username, password,))
+        cursor.execute(
+            'SELECT * FROM accounts WHERE username = %s AND password = SHA2(%s,256)', (username, password,))
         # Fetch one record and return result
         account = cursor.fetchone()
         print("123")
@@ -75,17 +83,21 @@ def login():
     return jsonify(msg)
 
 # http://localhost:5000/python/logout - this will be the logout page
-@app.route('/pythonlogin/logout')
+
+
+@app.route('/pythonlogin/logout', methods=['GET', 'POST'])
 def logout():
     # Remove session data, this will log the user out
-   session.pop('loggedin', None)
-   session.pop('id', None)
-   session.pop('username', None)
-   # Redirect to login page
-   return jsonify({'status': True})
+    session.pop('loggedin', None)
+    session.pop('id', None)
+    session.pop('username', None)
+    # Redirect to login page
+    return jsonify({'status': True, 'msg': 'Logout successfully'})
 
 # http://localhost:5000/pythinlogin/home - this will be the home page, only accessible for loggedin users
-@app.route('/pythonlogin/home/', methods=['GET','POST'])
+
+
+@app.route('/pythonlogin/home/', methods=['GET', 'POST'])
 @token_required
 def home(token):
     print(token)
@@ -107,7 +119,7 @@ def home(token):
     return jsonify({"data": information, "status": True, "token": token})
 
 
-@app.route('/pythonlogin/add/', methods=['GET','POST'])
+@app.route('/pythonlogin/add/', methods=['GET', 'POST'])
 def add():
     # Output message if something goes wrong...
     msg = ''
@@ -124,9 +136,10 @@ def add():
         act = bool(request.json['act'])
         age = request.json['age']
         email = request.json['email']
-                # Check if account exists using MySQL
+        # Check if account exists using MySQL
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('INSERT INTO employees (f_name, l_name, dob, email, skill_id, active, age) VALUES (%s, %s, %s, %s, %s, %s, %s)', (f_name, l_name, dob, email, skl, act, age,))
+        cursor.execute('INSERT INTO employees (f_name, l_name, dob, email, skill_id, active, age) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+                       (f_name, l_name, dob, email, skl, act, age,))
         cursor.execute('SELECT MAX(e_id) FROM employees')
         x = list(cursor)
         mysql.connection.commit()
@@ -140,6 +153,7 @@ def add():
         msg = 'Please fill out the form!'
     # Show registration form with message (if any)
         return jsonify({"status": False})
+
 
 @app.route('/pythonlogin/edit/<id>', methods=['GET', 'POST'])
 def edit(id):
@@ -160,8 +174,8 @@ def edit(id):
         age = request.json['age']
         email = request.json['email']
         print(dob, type(dob))
-        print('eid',eid)
-                # Check if account exists using MySQL
+        print('eid', eid)
+        # Check if account exists using MySQL
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         # cursor.execute('UPDATE employees SET e_id = %s, e_name = %s, age = %s, email = %s WHERE e_id = %s', (eid, name, age, email, eid))
         cursor.execute('select * from employees WHERE e_id = %s', (eid,))
@@ -169,7 +183,8 @@ def edit(id):
         # If account exists show error and validation checks
         if account:
             print("START")
-            cursor.execute('UPDATE employees SET f_name = %s, l_name = %s, dob = %s, email = %s, skill_id = %s, active = %s, age = %s WHERE e_id = %s', (f_name, l_name, dob, email, skl, act, age, eid,))
+            cursor.execute('UPDATE employees SET f_name = %s, l_name = %s, dob = %s, email = %s, skill_id = %s, active = %s, age = %s WHERE e_id = %s',
+                           (f_name, l_name, dob, email, skl, act, age, eid,))
             # account2 = cursor.fetchone()
             mysql.connection.commit()
             print("FINISH")
@@ -179,13 +194,14 @@ def edit(id):
     # Show registration form with message (if any)
     return jsonify({"status": False})
 
+
 @app.route('/pythonlogin/delete/<id>',  methods=['GET', 'POST'])
 def delete(id):
     # Remove session data, this will log the user out
-   print(id, "delete reached")
-   cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-   cursor.execute('DELETE FROM employees WHERE e_id = %s', (id,))
-   mysql.connection.commit()
-   print("DELETED")
-   # Redirect to login page
-   return jsonify({"status": True})
+    print(id, "delete reached")
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('DELETE FROM employees WHERE e_id = %s', (id,))
+    mysql.connection.commit()
+    print("DELETED")
+    # Redirect to login page
+    return jsonify({"status": True})
