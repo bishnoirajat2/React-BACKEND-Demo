@@ -1,0 +1,8 @@
+flask
+flask_mysqldb
+flask_session
+redis
+MySQLdb.cursors
+jwt
+datetime
+functools
