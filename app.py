@@ -4,7 +4,7 @@ from flask_session import Session
 # from flask_cors import CORS
 import MySQLdb.cursors
 import redis
-from flask_api_cache import ApiCache
+# from flask_api_cache import ApiCache
 import jwt
 from datetime import datetime, timedelta
 from functools import wraps
